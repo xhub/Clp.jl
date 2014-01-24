@@ -820,31 +820,27 @@ end
 # Get an infeasibility ray (empty vector returned if none/wrong).
 function infeasibility_ray(model::ClpModel)
     _jl__check_model(model)
-    infeas_ray_p = @clp_ccall infeasibilityRay Ptr{Float64} (Ptr{Void},) model.p
     num_rows = int(get_num_rows(model))
-    local infeas_ray::Vector{Float64}
-    if infeas_ray_p != C_NULL
-        infeas_ray = copy(pointer_to_array(infeas_ray_p,(num_rows,)))
-        ccall(:free,Void,(Ptr{Void},),infeas_ray_p)
+    infeas_ray = Array(Float64, num_rows)
+    hasray = @clp_ccall infeasibilityRay Cint (Ptr{Void},Ptr{Float64}) model.p infeas_ray
+    if hasray == 1
+        return infeas_ray
     else
-        infeas_ray = Array(Float64,0)
+        return Array(Float64,0)
     end
-    return infeas_ray
 end
 
 # Get an unbounded ray (empty vector returned if none/wrong).
 function unbounded_ray(model::ClpModel)
     _jl__check_model(model)
-    unbd_ray_p = @clp_ccall unboundedRay Ptr{Float64} (Ptr{Void},) model.p
     num_cols = int(get_num_cols(model))
-    local unbd_ray::Vector{Float64}
-    if unbd_ray_p != C_NULL 
-        unbd_ray = copy(pointer_to_array(unbd_ray_p,(num_cols,)))
-        ccall(:free,Void,(Ptr{Void},),unbd_ray_p)
+    unbd_ray = Array(Float64, num_cols)
+    hasray = @clp_ccall unboundedRay Cint (Ptr{Void},Ptr{Float64}) model.p unbd_ray
+    if hasray == 1
+        return unbd_ray
     else
-        unbd_ray = Array(Float64,0)
+        return Array(Float64,0)
     end
-    return unbd_ray
 end
 
 # Query whether the status array exists (partly for OsiClp).
