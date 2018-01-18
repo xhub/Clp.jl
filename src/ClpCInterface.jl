@@ -369,11 +369,11 @@ function load_quadratic_objective(model::ClpModel,
 end
 
 # Read an mps file from the given filename.
-function read_mps(model::ClpModel, mpsfile::AbstractString, keep_names::Bool, ignore_errors::Bool)
+function read_mps(model::ClpModel, mpsfile::String, keep_names::Bool, ignore_errors::Bool)
     _jl__check_model(model)
     _jl__check_file_is_readable(mpsfile)
 
-    status = @clp_ccall readMps Int32 (Ptr{Void}, Ptr{UInt8}, Int32, Int32) model.p bytestring(mpsfile) keep_names ignore_errors
+    status = @clp_ccall readMps Int32 (Ptr{Void}, Ptr{UInt8}, Int32, Int32) model.p Base.cconvert(Cstring, mpsfile) keep_names ignore_errors
     if status != 0
         error("read_mps: error reading file $mpsfile")
     end
@@ -583,7 +583,7 @@ function problem_name(model::ClpModel)
     _jl__check_model(model)
     problem_name = Array{UInt8}(1000)
     @clp_ccall problemName Void (Ptr{Void}, Int32, Ptr{UInt8}) model.p 1000 problem_name
-    return bytestring(problem_name)
+    return Base.cconvert(Cstring, problem_name)
 end
 
 # Set problem name.  Must have \0 at end.
@@ -591,7 +591,7 @@ function set_problem_name(model::ClpModel, name::String)
     _jl__check_model(model)
     @assert isascii(name)
     
-    @clp_ccall setProblemName Void (Ptr{Void}, Int32, Ptr{UInt8}) model.p (length(name)+1) bytestring(name)
+    @clp_ccall setProblemName Void (Ptr{Void}, Int32, Ptr{UInt8}) model.p (length(name)+1) Base.cconvert(Cstring, name)
 end
 =#
 
@@ -970,7 +970,7 @@ function row_name(model::ClpModel, row::Integer)
     size = @clp_ccall lengthNames Int32 (Ptr{Void},) model.p
     row_name = Array{UInt8}(size+1)
     @clp_ccall rowName Void (Ptr{Void}, Int32, Ptr{UInt8}) model.p (row-1) row_name
-    return bytestring(row_name)
+    return Base.cconvert(Cstring, row_name)
 end
 
 # Return an array with a column name.
@@ -983,7 +983,7 @@ function column_name(model::ClpModel, col::Integer)
     size = @clp_ccall lengthNames Int32 (Ptr{Void},) model.p
     col_name = Array{UInt8}(size+1)
     @clp_ccall columnName Void (Ptr{Void}, Int32, Ptr{UInt8}) model.p (col-1) col_name
-    return bytestring(col_name)
+    return Base.cconvert(Cstring, col_name)
 end
 
 # General solve algorithm which can do presolve.
@@ -1192,7 +1192,7 @@ function save_model(model::ClpModel, file_name::String)
     _jl__check_model(model)
     @assert isascii(file_name)
     
-    @clp_ccall saveModel Int32 (Ptr{Void},Ptr{UInt8}) model.p bytestring(file_name)
+    @clp_ccall saveModel Int32 (Ptr{Void},Ptr{UInt8}) model.p Base.cconvert(Cstring, file_name)
 end
 
 # Restore model from file, returns 0 if success,
@@ -1201,7 +1201,7 @@ function restore_model(model::ClpModel, file_name::String)
     _jl__check_model(model)
     @assert isascii(file_name)
 
-    @clp_ccall restoreModel Int32 (Ptr{Void},Ptr{UInt8}) model.p bytestring(file_name)
+    @clp_ccall restoreModel Int32 (Ptr{Void},Ptr{UInt8}) model.p Base.cconvert(Cstring, file_name)
 end
 
 # Just check solution (for external use) - sets sum of
@@ -1285,7 +1285,7 @@ function print_model(model::ClpModel, prefix::String)
     _jl__check_model(model)
     @assert isascii(prefix)
 
-    @clp_ccall printModel Void (Ptr{Void},Ptr{UInt8}) model.p bytestring(prefix)
+    @clp_ccall printModel Void (Ptr{Void},Ptr{UInt8}) model.p Base.cconvert(Cstring, prefix)
 end
 
 function get_small_element_value(model::ClpModel)
